@@ -1,1 +1,1 @@
-# Claude AI Architect CCertification
+# Claude AI Architect Certification
