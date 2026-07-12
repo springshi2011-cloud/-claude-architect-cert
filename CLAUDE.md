@@ -2,22 +2,58 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Repository status
+## What this is
 
-This repository is **empty of code**. As of the last update to this file, it contains only:
+Hands-on Claude API exercises for AI Architect certification prep. Python, `anthropic` SDK, pytest.
 
-- `README.md` — a single line: `# Claude AI Architect Certification`
-- `.claude/` — Claude Code permission settings (not project content)
+## Commands
 
-There is **no build system, no dependency manifest, no test suite, and no lint configuration** — and therefore no build, test, or lint commands to run. Do not infer or guess them. If a task requires one, ask the user or read the tooling config that introduces it.
+```sh
+python3 -m venv .venv && .venv/bin/pip install -e ".[dev]"   # setup
 
-There are no Cursor or Copilot rule files.
+.venv/bin/pytest                          # offline tests (default; no API key needed)
+.venv/bin/pytest -m live                  # smoke tests against the real API
+.venv/bin/pytest tests/test_config.py::test_text_of_skips_non_text_blocks   # single test
+.venv/bin/ruff check .                    # lint
 
-## Git
+.venv/bin/python -m exercises.ex01_messages   # run an exercise (ex01..ex04)
+```
 
-- Default branch: `main`, tracking `origin/main` at `github.com/springshi2011-cloud/-claude-architect-cert`.
-- Commit identity is configured globally as `springshi2011-Cloud <springshi2011@gmail.com>`. The initial commit `c589bc4` predates this and carries an auto-derived local identity.
+## Architecture
 
-## When code lands
+`src/exercises/config.py` is the single place that pins the model and request defaults —
+`MODEL`, `ADAPTIVE_THINKING`, `VISIBLE_THINKING`, `get_client()`, and `text_of()`. Every
+exercise imports from it instead of constructing its own client or repeating a model string.
+Change the model in one place, not five.
 
-This file was written against an empty repository and its usefulness expires as soon as real code exists. Once the project is scaffolded, re-run `/init` to regenerate it with actual commands and architecture.
+`text_of(message)` exists because `message.content` is a list of blocks that can include
+`thinking` and `tool_use` alongside `text` — indexing `content[0].text` is not safe.
+
+Exercises `ex01`–`ex04` are independent, each a runnable `__main__` plus importable functions
+so tests can call them: single call, streaming, tool use, structured output.
+
+## API constraints this code is built around
+
+These return a **400** on `claude-opus-4-8` and are load-bearing to how the code is written —
+do not reintroduce them:
+
+- `thinking: {"type": "enabled", "budget_tokens": N}` — removed. Use `{"type": "adaptive"}`
+  and control depth with `output_config: {"effort": ...}`.
+- `temperature`, `top_p`, `top_k` — removed. Steer with prompting.
+- Assistant-turn prefill (a trailing `{"role": "assistant"}` message) — removed. Use
+  `messages.parse()` with a Pydantic model (see `ex04_structured.py`).
+
+Two silent behaviors, not errors:
+
+- Omitting `thinking` runs with thinking **off**; it must be set explicitly.
+- `thinking.display` defaults to `"omitted"`, which streams thinking blocks whose text is an
+  empty string. `VISIBLE_THINKING` sets `"summarized"` to get readable reasoning back.
+
+`tests/test_ex01_messages.py` asserts the outgoing request shape against all of the above, so
+a regression fails offline rather than costing an API round trip.
+
+## Testing
+
+Offline tests mock the client (`monkeypatch` over `get_client`) and run with no credentials —
+keep it that way, so the default `pytest` run stays free and fast. Anything hitting the real
+API goes behind `@pytest.mark.live`, which `addopts` deselects by default.

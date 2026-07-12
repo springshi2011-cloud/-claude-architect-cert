@@ -1,0 +1,37 @@
+[project]
+name = "claude-architect-cert"
+version = "0.1.0"
+description = "Hands-on Claude API exercises for AI Architect certification prep"
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.69",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "live: exercises the real Claude API; requires ANTHROPIC_API_KEY (deselect with '-m \"not live\"')",
+]
+addopts = "-m 'not live'"
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
