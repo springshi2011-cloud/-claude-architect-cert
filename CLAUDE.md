@@ -6,6 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Hands-on Claude API exercises for AI Architect certification prep. Python, `anthropic` SDK, pytest.
 
+## Language
+
+Respond in **English**. This is the default for the whole repository.
+
+Subdirectories may override it with their own `CLAUDE.md` — when working on files under such a
+directory, the more specific file wins. See `module-a/CLAUDE.md`.
+
 ## Commands
 
 ```sh
