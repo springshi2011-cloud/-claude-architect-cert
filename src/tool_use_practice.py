@@ -46,4 +46,4 @@ def run_conversation(user_message):
         )
     return response.content[0].text
 
-print(run_conversation("Set a reminder for my doctor appointment next Monday at 9am"))
+print(run_conversation("Set a reminder for my doctor appointment on 2026-07-21 at 09:00"))
